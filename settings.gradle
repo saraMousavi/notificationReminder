@@ -1,0 +1,3 @@
+include ':notificationreminder'
+include ':app'
+rootProject.name = "ReminderWithNotification"
