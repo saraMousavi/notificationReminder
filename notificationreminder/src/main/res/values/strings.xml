@@ -1,1 +1,35 @@
-<resources></resources>
+<resources>
+    <string name="addReminder">add reminder</string>
+    <string name="title_activity_add_reminder">ScrollingActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="save">save</string>
+    <string name="titleReminder">title</string>
+    <string name="reminderTime">Reminder Time:</string>
+    <string name="am_label">قبل‌ازظهر</string>
+    <string name="pm_label">بعدازظهر</string>
+    <string name="mdtp_hour_picker_description" msgid="7586639618712934060">"لغزنده دایره‌ای ساعت"</string>
+    <!-- Accessibility announcement for hour circular picker [CHAR LIMIT=NONE] -->
+    <string name="mdtp_select_hours" msgid="7651068754188418859">"انتخاب ساعت"</string>
+    <!--
+         Content description for the minute selector in the time picker, which displays
+         selectable five-minute intervals along the inside edge of a circle, as in an analog clock.
+         [CHAR LIMIT=50]
+    -->
+    <string name="mdtp_minute_picker_description" msgid="6024811202872705251">"لغزنده دایره‌ای دقیقه"</string>
+    <!-- Accessibility announcement for minute circular picker [CHAR LIMIT=NONE] -->
+    <string name="mdtp_select_minutes" msgid="8327182090226828481">"انتخاب دقیقه"</string>
+    <!-- DO NOT TRANSLATE -->
+    <string name="mdtp_time_placeholder" translatable="false">--</string>
+    <!-- DO NOT TRANSLATE -->
+    <string name="mdtp_time_separator" translatable="false">:</string>
+    <!-- Accessibility announcement when a number that had been typed in is deleted [CHAR_LIMIT=NONE] -->
+    <string name="mdtp_deleted_key" msgid="6908431551612331381">حذف شد</string>
+    <string name="dueDate">موعد مقرر</string>
+    <string name="mdtp_item_is_selected" msgid="2674929164900463786">انتخاب شد</string>
+    <string name="mdtp_day_picker_description">Month grid of days</string>
+    <string name="mdtp_select_day">Select month and day</string>
+    <string name="mdtp_year_picker_description">Year list</string>
+    <string name="mdtp_select_year">Select year</string>
+    <string name="ok">ok</string>
+    <string name="cancel">cancel</string>
+</resources>
