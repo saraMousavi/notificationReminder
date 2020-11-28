@@ -4,9 +4,9 @@ If you want to set reminder in your android application only with invoking a fun
 # installation
 For a working implementation, please have a look at app project
 1.add dependency to Module gradle <br/>
-``android
-dependencies {
-    implementation 'com.github.saraMousavi:notificationReminder:v1.0'
+``
+dependencies {<br/>
+    implementation 'com.github.saraMousavi:notificationReminder:v1.0'<br/>
 }``
 # usage
 1.create an instance from ``AlarmReceiver`` class
