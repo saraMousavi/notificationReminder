@@ -39,14 +39,15 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         Intent notificationIntent = new Intent(context, NotificationMessage.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        notificationIntent.putExtra("message", "text");
-        PendingIntent mClick = PendingIntent.getActivity(context, intent.getExtras().getInt("id"), notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notificationIntent.putExtra("message", intent.getExtras().getString("title"));
+        PendingIntent mClick = PendingIntent.getActivity(context, intent.getExtras().getInt("id"),
+                notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationManager nManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         final Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
         // Create Notification
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
-                    .setSmallIcon(R.mipmap.ic_launcher)  //R.mipmap.ic_launcher
+                    .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(intent.getExtras().getString("title"))
                     .setSmallIcon(R.drawable.ic_black_alarm)
                     .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
@@ -70,7 +71,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)  //R.mipmap.ic_launcher
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(intent.getExtras().getString("title"))
                 .setContentIntent(mClick)
                 .setContentText(intent.getExtras().getString("title"))
@@ -78,10 +79,10 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setPriority(NotificationManagerCompat.IMPORTANCE_MAX)
                 .setAutoCancel(true)
                 .setColor(ContextCompat.getColor(context, R.color.green));
-        vibrator.vibrate(300);
+        vibrator.vibrate(500);
 
         //notify
-        nManager.notify(1, mBuilder.build());
+        nManager.notify(intent.getExtras().getInt("id"), mBuilder.build());
 
     }
 
