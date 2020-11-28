@@ -33,6 +33,6 @@ alarmReceiver.setAlarm(getApplicationContext(), mCalendar, ID, reminder.getRemin
                 isRepeat,  intervalDuration);
  ```
  ## Important note
- **Don't worry for rebooting your device**<br/>
- This library save all your reminder in Reminder table in a Sqlite database and restart them after your device have been reboot.
+ **If you want to restart your phone, dont worry about reminders**<br/>
+ This library save all your reminder in ``Reminder`` table in Sqlite database and restart them after your device have been reboot.
  
