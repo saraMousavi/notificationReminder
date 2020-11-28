@@ -23,15 +23,19 @@ import java.util.Calendar;
 
 import ir.sara.mousavi.notificationreminder.R;
 import ir.sara.mousavi.notificationreminder.activity.NotificationMessage;
+import ir.sara.mousavi.notificationreminder.utils.Init;
 
-public class AlarmReceiver  extends BroadcastReceiver {
+public class AlarmReceiver extends BroadcastReceiver {
     AlarmManager mAlarmManager;
     PendingIntent mPendingIntent;
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public void onReceive(Context context, Intent intent) {
-        if(intent.getExtras().getInt("isRepeat") == 1){
-            new AlarmReceiver().setAlarm(context, null, intent.getExtras().getInt("id"), 20000, intent.getExtras().getString("title"));
+        if (intent.getExtras().getInt("isRepeat") == 1) {
+            new AlarmReceiver().setAlarm(context, null, intent.getExtras().getInt("id"),
+                    intent.getExtras().getString("title"), intent.getExtras().getInt("isRepeat"),
+                    intent.getExtras().getLong("intervalDuration"));
         }
         Intent notificationIntent = new Intent(context, NotificationMessage.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -58,49 +62,50 @@ public class AlarmReceiver  extends BroadcastReceiver {
         // API_service 26 notification - NotificationChannel
         String channelId = "channel-id";
         String channelName = "ALARM";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel mChannel = new NotificationChannel(
-                    channelId, channelName, importance);
-            nManager.createNotificationChannel(mChannel);
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel mChannel = new NotificationChannel(
+                channelId, channelName, importance);
+        nManager.createNotificationChannel(mChannel);
 
 
-            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
-                    .setSmallIcon(R.mipmap.ic_launcher)  //R.mipmap.ic_launcher
-                    .setContentTitle(intent.getExtras().getString("title"))
-                    .setContentIntent(mClick)
-                    .setContentText(intent.getExtras().getString("title"))
-                    .setSound(alarmSound)
-                    .setPriority(NotificationManagerCompat.IMPORTANCE_MAX)
-                    .setAutoCancel(true)
-                    .setColor(ContextCompat.getColor(context, R.color.green));
-            vibrator.vibrate(300);
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.mipmap.ic_launcher)  //R.mipmap.ic_launcher
+                .setContentTitle(intent.getExtras().getString("title"))
+                .setContentIntent(mClick)
+                .setContentText(intent.getExtras().getString("title"))
+                .setSound(alarmSound)
+                .setPriority(NotificationManagerCompat.IMPORTANCE_MAX)
+                .setAutoCancel(true)
+                .setColor(ContextCompat.getColor(context, R.color.green));
+        vibrator.vibrate(300);
 
-            //notify
-            nManager.notify(1, mBuilder.build());
-        }
+        //notify
+        nManager.notify(1, mBuilder.build());
 
     }
 
-    public void setAlarm(Context context, Calendar calendar, int ID, long diffTime, String title) {
+    public void setAlarm(Context context, Calendar calendar, int ID, String title, int isRepeat, long intervalDuration) {
         mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-        // Put Reminder ID in Intent Extra
+        // Put isRepeat, title, Reminder ID, intervalDuration in Intent Extra
         Intent intent = new Intent(context, AlarmReceiver.class);
-        intent.putExtra("isRepeat", 1);
+        intent.putExtra("isRepeat", isRepeat);
         intent.putExtra("title", title);
         intent.putExtra("id", ID);
+        intent.putExtra("intervalDuration", intervalDuration);
         mPendingIntent = PendingIntent.getBroadcast(context, ID, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         // Calculate notification time
-//        Calendar c = Calendar.getInstance();
-//        long currentTime = c.getTimeInMillis();
-//        long diffTime = calendar.getTimeInMillis() - currentTime;
+        long diffTime;
+        if(calendar == null){
+            diffTime = intervalDuration;
+        } else {
+            diffTime = Init.getDifferentBetweenToCalenderInMilliSecond(calendar);
+        }
 
         // Start alarm using notification time
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
                     System.currentTimeMillis() + diffTime,
                     mPendingIntent);
@@ -110,36 +115,9 @@ public class AlarmReceiver  extends BroadcastReceiver {
                     mPendingIntent);
         } else {
             mAlarmManager.set(AlarmManager.RTC_WAKEUP,
-                    System.currentTimeMillis() + 5000,
+                    System.currentTimeMillis() + diffTime,
                     mPendingIntent);
         }
-
-        // Restart alarm if device is rebooted
-        ComponentName receiver = new ComponentName(context, AutoStartServicesReceiver.class);
-        PackageManager pm = context.getPackageManager();
-        pm.setComponentEnabledSetting(receiver,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP);
-    }
-
-    public void setRepeatAlarm(Context context, Calendar calendar, int ID, long RepeatTime) {
-        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
-        // Put Reminder ID in Intent Extra
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        intent.putExtra("id", Integer.toString(ID));
-        mPendingIntent = PendingIntent.getBroadcast(context, ID, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-
-        // Calculate notification timein
-//        Calendar c = Calendar.getInstance();
-//        long currentTime = c.getTimeInMillis();
-//        long diffTime = calendar.getTimeInMillis() - currentTime;
-
-        // Start alarm using initial notification time and repeat interval time
-        System.out.println("RepeatTime = " + RepeatTime);
-        mAlarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + 10000,
-                RepeatTime , mPendingIntent);
 
         // Restart alarm if device is rebooted
         ComponentName receiver = new ComponentName(context, AutoStartServicesReceiver.class);
@@ -153,7 +131,7 @@ public class AlarmReceiver  extends BroadcastReceiver {
         mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         // Cancel Alarm using Reminder ID
-        mPendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(context, AlarmReceiver.class), 0);
+        mPendingIntent = PendingIntent.getBroadcast(context, ID, new Intent(context, AlarmReceiver.class), 0);
         mAlarmManager.cancel(mPendingIntent);
 
         // Disable alarm

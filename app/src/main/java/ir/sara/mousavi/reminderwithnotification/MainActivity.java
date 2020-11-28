@@ -10,7 +10,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notif);
+        setContentView(R.layout.activity_notification_main);
         try {
            Intent intent = new Intent(MainActivity.this, Class.forName("ir.sara.mousavi.notificationreminder.activity.MainActivity"));
            finish();

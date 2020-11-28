@@ -32,4 +32,8 @@
     <string name="mdtp_select_year">Select year</string>
     <string name="ok">ok</string>
     <string name="cancel">cancel</string>
+    <string name="dontRepeat">don\'t repeat</string>
+    <string name="each">each</string>
+    <string name="enterReminderTile">enter title.</string>
+    <string name="enterReminderTime">enter reminer time.</string>
 </resources>

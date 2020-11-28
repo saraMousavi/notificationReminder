@@ -1,8 +1,11 @@
 package ir.sara.mousavi.notificationreminder.activity;
 
+import android.app.AlarmManager;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -12,6 +15,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,6 +26,7 @@ import ir.sara.mousavi.notificationreminder.R;
 import ir.sara.mousavi.notificationreminder.db.DataBaseHelper;
 import ir.sara.mousavi.notificationreminder.db.holder.Reminder;
 import ir.sara.mousavi.notificationreminder.dialogs.AdvanceRepeatTypeDialog;
+import ir.sara.mousavi.notificationreminder.receiver.AlarmReceiver;
 import ir.sara.mousavi.notificationreminder.utils.calender.DatePickerDialog;
 import ir.sara.mousavi.notificationreminder.utils.calender.PersianCalendar;
 import ir.sara.mousavi.notificationreminder.utils.calender.TimePickerDialog;
@@ -36,6 +41,8 @@ public class AddReminderActivity extends AppCompatActivity
     Button insertReminderBtn;
     EditText reminderTitle;
     DataBaseHelper db;
+    private Calendar mCalendar;
+    private int mYear, mMonth, mHour, mMinute, mDay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,8 +89,82 @@ public class AddReminderActivity extends AppCompatActivity
     }
 
     private void insertReminder() {
-        Reminder reminder = new Reminder(reminderTitle.getText().toString(), reminderTimeValue.getText().toString(), "daily", 1);
-        db.insertReminder(reminder);
+        if(reminderTitle.getText().toString().isEmpty()){
+            Toast.makeText(getApplicationContext(), getString(R.string.enterReminderTile), Toast.LENGTH_LONG).show();
+            return;
+        }
+        if(reminderTimeText == null){
+            Toast.makeText(getApplicationContext(), getString(R.string.enterReminderTime), Toast.LENGTH_LONG).show();
+            return;
+        }
+        int intervalTime = 0;
+        String intervalType = "";
+        long intervalDuration = 0;
+        SharedPreferences sharedPreferences  = PreferenceManager
+                .getDefaultSharedPreferences(AddReminderActivity.this);
+        switch (repeatTypeSpinner.getSelectedItemPosition()){
+            case 1:
+                intervalTime = 1;
+                intervalType = "hourly";
+                intervalDuration = AlarmManager.INTERVAL_HOUR;
+                break;
+            case 2:
+                intervalTime = 1;
+                intervalType = "daily";
+                intervalDuration = AlarmManager.INTERVAL_DAY;
+                break;
+            case 3:
+                intervalTime = 1;
+                intervalType = "weekly";
+                intervalDuration = 7 * AlarmManager.INTERVAL_DAY;
+                break;
+            case 4:
+                intervalTime = 1;
+                intervalType = "monthly";
+                intervalDuration = 30 * AlarmManager.INTERVAL_DAY;
+                break;
+            case 5:
+                intervalTime = 1;
+                intervalType = "yearly";
+                intervalDuration = 365 * AlarmManager.INTERVAL_DAY;
+                break;
+            case 6:
+                intervalTime = sharedPreferences.getInt("IntervalTime", 0);
+                intervalType = sharedPreferences.getString("IntervalType", "");
+                switch (intervalType){
+                    case "Hour":
+                        intervalDuration = intervalTime * AlarmManager.INTERVAL_HOUR;
+                        break;
+                    case "Day":
+                        intervalDuration = intervalTime * AlarmManager.INTERVAL_DAY;
+                        break;
+                    case "Week":
+                        intervalDuration = 7 * intervalTime * AlarmManager.INTERVAL_DAY;
+                        break;
+                    case "Month":
+                        intervalDuration = 30 * intervalTime * AlarmManager.INTERVAL_DAY;
+                        break;
+                    case "Year":
+                        intervalDuration = 365 * intervalTime * AlarmManager.INTERVAL_DAY;
+                        break;
+                }
+                break;
+        }
+        Reminder reminder = new Reminder(reminderTitle.getText().toString(), reminderTimeValue.getText().toString(),
+                intervalType, intervalTime);
+        int ID = (int) db.insertReminder(reminder);
+        mCalendar.set(Calendar.MONTH, --mMonth);
+        mCalendar.set(Calendar.YEAR, mYear);
+        mCalendar.set(Calendar.DAY_OF_MONTH, mDay);
+        mCalendar.set(Calendar.HOUR_OF_DAY, mHour);
+        mCalendar.set(Calendar.MINUTE, mMinute);
+        mCalendar.set(Calendar.SECOND, 0);
+        new AlarmReceiver().setAlarm(getApplicationContext(), mCalendar, ID, reminder.getReminderTitle(),
+                (repeatTypeSpinner.getSelectedItemPosition() == 0) ? 0 : 1,  intervalDuration);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove("IntervalTime");
+        editor.remove("IntervalType");
+        editor.apply();
         setResult(RESULT_OK);
         finish();
     }
@@ -104,6 +185,7 @@ public class AddReminderActivity extends AppCompatActivity
         remindTimeArray.add("Monthly");
         remindTimeArray.add("Yearly");
         remindTimeArray.add("Advance");
+        mCalendar = Calendar.getInstance();
         ArrayAdapter<String> remindTimeAdapter = new ArrayAdapter<String>(AddReminderActivity.this,
                 android.R.layout.simple_spinner_dropdown_item, remindTimeArray);
         repeatTypeSpinner.setAdapter(remindTimeAdapter);
@@ -111,7 +193,10 @@ public class AddReminderActivity extends AppCompatActivity
 
     @Override
     public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
-        reminderTimeText = year + "/" + monthOfYear + "/" + dayOfMonth;
+        mYear = year;
+        mMonth = monthOfYear + 1;
+        mDay = dayOfMonth;
+        reminderTimeText = year + "/" + mMonth + "/" + dayOfMonth;
         Calendar now = Calendar.getInstance();
         TimePickerDialog timePickerDialog = TimePickerDialog.newInstance(
                 AddReminderActivity.this,
@@ -124,6 +209,8 @@ public class AddReminderActivity extends AppCompatActivity
 
     @Override
     public void onTimeSet(TimePickerDialog view, int hourOfDay, int minute) {
+        mHour = hourOfDay;
+        mMinute = minute;
         reminderTimeText += "," + hourOfDay + ":" + minute;
         reminderTimeValue.setText(reminderTimeText);
     }

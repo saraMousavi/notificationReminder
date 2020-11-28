@@ -22,6 +22,7 @@ import ir.sara.mousavi.notificationreminder.R;
 import ir.sara.mousavi.notificationreminder.activity.MainActivity;
 import ir.sara.mousavi.notificationreminder.db.DataBaseHelper;
 import ir.sara.mousavi.notificationreminder.db.holder.Reminder;
+import ir.sara.mousavi.notificationreminder.receiver.AlarmReceiver;
 
 public class ReminderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     ArrayList<Reminder> mReminders;
@@ -36,7 +37,7 @@ public class ReminderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView reminderTitle, reminderTime;
+        public TextView reminderTitle, reminderTime, reminderIntervalItem;
         private ImageView deleteReminder;
 
 
@@ -45,6 +46,7 @@ public class ReminderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             reminderTitle = itemView.findViewById(R.id.reminderTitleItem);
             reminderTime = itemView.findViewById(R.id.reminderTimeItem);
             deleteReminder = itemView.findViewById(R.id.deleteReminder);
+            reminderIntervalItem = itemView.findViewById(R.id.reminderIntervalItem);
         }
     }
 
@@ -63,12 +65,21 @@ public class ReminderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
         final ItemViewHolder viewHolderItem = (ItemViewHolder) holder;
+        Reminder mReminder = mReminders.get(position);
         viewHolderItem.reminderTitle.setText(mReminders.get(position).getReminderTitle());
         viewHolderItem.reminderTime.setText(mReminders.get(position).getReminderTime());
+        if(mReminder.getReminderIntervalTime() == 1){
+            viewHolderItem.reminderIntervalItem.setText(mReminder.getReminderIntervalType());
+        } else if(mReminders.get(position).getReminderIntervalTime() > 1) {
+            viewHolderItem.reminderIntervalItem.
+                    setText(mContext.getString(R.string.each) + mReminder.getReminderIntervalTime()
+                    + mReminder.getReminderIntervalType());
+        }
         viewHolderItem.deleteReminder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 db.deleteReminder(mReminders.get(position));
+                new AlarmReceiver().cancelAlarm(mContext, mReminders.get(position).getReminderId());
                 ((Activity) mContext).finish();
                 ((Activity) mContext).overridePendingTransition(0, 0);
                 mContext.startActivity(new Intent(mContext, MainActivity.class));

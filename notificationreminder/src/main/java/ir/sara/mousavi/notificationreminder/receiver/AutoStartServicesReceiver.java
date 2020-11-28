@@ -1,26 +1,28 @@
 package ir.sara.mousavi.notificationreminder.receiver;
 
+import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+
+import ir.sara.mousavi.notificationreminder.db.DataBaseHelper;
+import ir.sara.mousavi.notificationreminder.db.holder.Reminder;
+import ir.sara.mousavi.notificationreminder.utils.Init;
 
 
 public class AutoStartServicesReceiver extends BroadcastReceiver {
     private String mTitle;
-    private String mTime;
-    private String mDate;
-    private String mRepeatNo;
-    private String mRepeatType;
-    private String mActive;
-    private String mRepeat = "true";
+    private long mIntervalDuration;
     private String[] mDateSplit;
     private String[] mTimeSplit;
     private int mYear, mMonth, mHour, mMinute, mDay, mReceivedID;
-    private long mRepeatTime;
+    private long mRepeatDuration;
+    private int mIsRepeat = 0;
 
     private Calendar mCalendar;
     private AlarmReceiver mAlarmReceiver;
@@ -31,60 +33,106 @@ public class AutoStartServicesReceiver extends BroadcastReceiver {
     private static final long milDay = 86400000L;
     private static final long milWeek = 604800000L;
     private static final long milMonth = 2592000000L;
+
     @Override
     public void onReceive(Context context, Intent intent) {
-        String manufacture = "xiaomi";
-        if(manufacture.equalsIgnoreCase(Build.MANUFACTURER)){
-            Intent intent1 = new Intent();
-            intent1.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.mermcenter.autostart.AutoStartManagementActivity"));
-            context.startActivity(intent1);
-        }
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
+            DataBaseHelper db = new DataBaseHelper(context);
+            ArrayList<Reminder> reminders = db.getAllReminders();
+            for (Reminder reminder : reminders) {
+                mReceivedID = reminder.getReminderId();
+                mTitle = reminder.getReminderTitle();
+                //once reminder
+                if (reminder.getReminderIntervalTime() == 0) {
+                    if (Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar) >= 0) {
+                        String mDate = reminder.getReminderTime();
+                        mDateSplit = (mDate.split(",")[0]).split("/");
+                        mTimeSplit = (mDate.split(",")[1]).split(":");
 
-            mCalendar = Calendar.getInstance();
-            mAlarmReceiver = new AlarmReceiver();
+                        mDay = Integer.parseInt(mDateSplit[2]);
+                        mMonth = Integer.parseInt(mDateSplit[1]);
+                        mYear = Integer.parseInt(mDateSplit[0]);
+                        mHour = Integer.parseInt(mTimeSplit[0]);
+                        mMinute = Integer.parseInt(mTimeSplit[1]);
 
-                mDateSplit = mDate.split("/");
-                mTimeSplit = mTime.split(":");
+                        mCalendar.set(Calendar.MONTH, --mMonth);
+                        mCalendar.set(Calendar.YEAR, mYear);
+                        mCalendar.set(Calendar.DAY_OF_MONTH, mDay);
+                        mCalendar.set(Calendar.HOUR_OF_DAY, mHour);
+                        mCalendar.set(Calendar.MINUTE, mMinute);
+                        mCalendar.set(Calendar.SECOND, 0);
+                    }
+                } else {
+                    //repeated reminder
+                    mIsRepeat = 1;
+                    String mDate = reminder.getReminderTime();
+                    mDateSplit = (mDate.split(",")[0]).split("/");
+                    mTimeSplit = (mDate.split(",")[1]).split(":");
 
-                mDay = Integer.parseInt(mDateSplit[0]);
-                mMonth = Integer.parseInt(mDateSplit[1]);
-                mYear = Integer.parseInt(mDateSplit[2]);
-                mHour = Integer.parseInt(mTimeSplit[0]);
-                mMinute = Integer.parseInt(mTimeSplit[1]);
+                    mDay = Integer.parseInt(mDateSplit[2]);
+                    mMonth = Integer.parseInt(mDateSplit[1]);
+                    mYear = Integer.parseInt(mDateSplit[0]);
+                    mHour = Integer.parseInt(mTimeSplit[0]);
+                    mMinute = Integer.parseInt(mTimeSplit[1]);
 
-                mCalendar.set(Calendar.MONTH, --mMonth);
-                mCalendar.set(Calendar.YEAR, mYear);
-                mCalendar.set(Calendar.DAY_OF_MONTH, mDay);
-                mCalendar.set(Calendar.HOUR_OF_DAY, mHour);
-                mCalendar.set(Calendar.MINUTE, mMinute);
-                mCalendar.set(Calendar.SECOND, 0);
-
-                // Cancel existing notification of the reminder by using its ID
-                // mAlarmReceiver.cancelAlarm(context, mReceivedID);
-
-                // Check repeat type
-                if (mRepeatType.equals("Minute")) {
-                    mRepeatTime = Integer.parseInt(mRepeatNo) * milMinute;
-                } else if (mRepeatType.equals("Hour")) {
-                    mRepeatTime = Integer.parseInt(mRepeatNo) * milHour;
-                } else if (mRepeatType.equals("Day")) {
-                    mRepeatTime = Integer.parseInt(mRepeatNo) * milDay;
-                } else if (mRepeatType.equals("Week")) {
-                    mRepeatTime = Integer.parseInt(mRepeatNo) * milWeek;
-                } else if (mRepeatType.equals("Month")) {
-                    mRepeatTime = Integer.parseInt(mRepeatNo) * milMonth;
-                }
-
-                // Create a new notification
-                if (mActive.equals("true")) {
-                    if (mRepeat.equals("true")) {
-                        mAlarmReceiver.setRepeatAlarm(context, mCalendar, 1, 60000);
-                    } else if (mRepeat.equals("false")) {
-                        mAlarmReceiver.setAlarm(context, mCalendar, 1, 5000, intent.getExtras().getString("title"));
+                    mCalendar.set(Calendar.MONTH, --mMonth);
+                    mCalendar.set(Calendar.YEAR, mYear);
+                    mCalendar.set(Calendar.DAY_OF_MONTH, mDay);
+                    mCalendar.set(Calendar.HOUR_OF_DAY, mHour);
+                    mCalendar.set(Calendar.MINUTE, mMinute);
+                    mCalendar.set(Calendar.SECOND, 0);
+                    switch (reminder.getReminderIntervalType()){
+                        case "Hour":
+                        case "hourly":
+                            mIntervalDuration = AlarmManager.INTERVAL_HOUR * reminder.getReminderIntervalTime();
+                            break;
+                        case "Day":
+                        case "daily":
+                            mIntervalDuration = AlarmManager.INTERVAL_DAY * reminder.getReminderIntervalTime();
+                            break;
+                        case "Week":
+                        case "weekly":
+                            mIntervalDuration = AlarmManager.INTERVAL_DAY * 7 * reminder.getReminderIntervalTime();
+                            break;
+                        case "Month":
+                        case "monthly":
+                            mIntervalDuration = AlarmManager.INTERVAL_DAY * 30 * reminder.getReminderIntervalTime();
+                            break;
+                        case "Year":
+                        case "yearly":
+                            mIntervalDuration = AlarmManager.INTERVAL_DAY * 365 * reminder.getReminderIntervalTime();
+                            break;
+                    }
+                    //if created time had passed
+                    if (Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar) < 0) {
+                        switch (reminder.getReminderIntervalType()){
+                            case "Hour":
+                            case "hourly":
+                                mCalendar.add(Calendar.MILLISECOND, (int) (milHour + Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar)));
+                                break;
+                            case "Day":
+                            case "daily":
+                                mCalendar.add(Calendar.MILLISECOND, (int) (milDay + Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar)));
+                                break;
+                            case "Week":
+                            case "weekly":
+                                mCalendar.add(Calendar.MILLISECOND, (int) (milWeek+ Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar)));
+                                break;
+                            case "Month":
+                            case "monthly":
+                                mCalendar.add(Calendar.MILLISECOND, (int) (milMonth + Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar)));
+                                break;
+                            case "Year":
+                            case "yearly":
+                                mCalendar.add(Calendar.MILLISECOND, (int) ((milDay * 365) + Init.getDifferentBetweenToCalenderInMilliSecond(mCalendar)));
+                                break;
+                        }
                     }
                 }
+                // Create a new notification
+                mAlarmReceiver.setAlarm(context, mCalendar, mReceivedID, mTitle,
+                        mIsRepeat, mIntervalDuration);
+            }
         }
-
     }
 }

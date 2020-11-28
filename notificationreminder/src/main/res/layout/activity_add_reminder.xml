@@ -7,6 +7,6 @@
     android:fitsSystemWindows="true"
     tools:context=".activity.AddReminderActivity">
 
-    <include layout="@layout/content_scrolling" />
+    <include layout="@layout/activity_add_reminder_scrolling" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
