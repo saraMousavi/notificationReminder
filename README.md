@@ -10,9 +10,11 @@ dependencies {
 }``
 # usage
 1.create an instance from ``AlarmReceiver`` class <br/>
-``AlarmReceiver alarmReceiver = new AlarmReceiver();`` <br/><br/>
-2.Create Calender instance and set each time you want remind <br/>
-``Calendar mCalendar = Calendar.getInstance();
+``java
+    AlarmReceiver alarmReceiver = new AlarmReceiver();`` <br/><br/>
+2.Create Calender instance and set each time you want to remind <br/>
+``java
+    Calendar mCalendar = Calendar.getInstance();
         mCalendar.set(Calendar.MONTH, --mMonth);
         mCalendar.set(Calendar.YEAR, mYear);
         mCalendar.set(Calendar.DAY_OF_MONTH, mDay);
@@ -21,5 +23,6 @@ dependencies {
         mCalendar.set(Calendar.SECOND, 0);``<br/><br/>
         
 3.invoke ``setAlarm()`` function <br/>
-``alarmReceiver.setAlarm(getApplicationContext(), mCalendar, ID, reminder.getReminderTitle(),
+``java
+    alarmReceiver.setAlarm(getApplicationContext(), mCalendar, ID, reminder.getReminderTitle(),
                 (repeatTypeSpinner.getSelectedItemPosition() == 0) ? 0 : 1,  intervalDuration);``
