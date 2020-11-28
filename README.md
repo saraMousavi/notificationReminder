@@ -32,3 +32,7 @@ Calendar mCalendar = Calendar.getInstance();
 alarmReceiver.setAlarm(getApplicationContext(), mCalendar, ID, reminder.getReminderTitle(),
                 isRepeat,  intervalDuration);
  ```
+ ## Important note
+ **Don't worry for rebooting your device**<br/>
+ This library save all your reminder in Reminder table in a Sqlite database and restart them after your device have been reboot.
+ 
