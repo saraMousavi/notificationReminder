@@ -25,6 +25,10 @@ Calendar mCalendar = Calendar.getInstance();
  ``` 
 3.invoke ``setAlarm()`` function <br/>
  ```java
+ int isRepeat = 0;
+ //if you want set repeatedly reminder
+ isRepeat = 1;
+ //intervalDuration is a variable for duration from now until selected time in millisecond
 alarmReceiver.setAlarm(getApplicationContext(), mCalendar, ID, reminder.getReminderTitle(),
-                (repeatTypeSpinner.getSelectedItemPosition() == 0) ? 0 : 1,  intervalDuration);
+                isRepeat,  intervalDuration);
  ```
